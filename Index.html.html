@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimeTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f12;--sur:#151820;--sur2:#1c2030;--brd:#252a38;--acc:#5b8eff;--red:#ff6b6b;--grn:#43e8a0;--txt:#e8eaf2;--mut:#6b7390;--hd:"Syne",sans-serif;--mn:"DM Mono",monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:"DM Mono",monospace;min-height:100vh;font-size:13px;}
+/* SCREENS */
+.screen{min-height:100vh;display:none;align-items:center;justify-content:center;}
+#s-config{background:radial-gradient(ellipse at 30% 40%,rgba(91,142,255,.08),transparent 60%),var(--bg);}
+#s-auth{background:var(--bg);}
+/* BOXES */
+.box{background:var(--sur);border:1px solid var(--brd);border-radius:16px;padding:36px 40px;width:480px;max-width:95vw;}
+.logo{font-family:"Syne",sans-serif;font-size:26px;font-weight:800;margin-bottom:6px;}
+.logo span{color:var(--acc);}
+.sub{color:var(--mut);font-size:12px;margin-bottom:22px;line-height:1.7;}
+/* FORM ELEMENTS */
+.lbl{display:block;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.inp{width:100%;background:var(--bg);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:12px;padding:10px 12px;border-radius:8px;outline:none;margin-bottom:14px;}
+.inp:focus{border-color:var(--acc);}
+.btn-big{width:100%;padding:13px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-family:"Syne",sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-big:hover{background:#7aa3ff;}
+.btn-big:disabled{opacity:.6;cursor:not-allowed;}
+#cfg-msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;display:none;line-height:1.6;}
+/* AUTH TABS */
+.tabs{display:flex;border:1px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.tab{flex:1;padding:9px;text-align:center;cursor:pointer;font-size:12px;background:transparent;color:var(--mut);border:none;font-family:"DM Mono",monospace;}
+.tab.on{background:var(--acc);color:#fff;}
+#auth-msg{font-size:11px;margin-top:8px;min-height:16px;}
+/* APP */
+#s-app{display:none;flex-direction:column;}
+header{background:var(--sur);border-bottom:1px solid var(--brd);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;}
+.hlogo{font-family:"Syne",sans-serif;font-size:19px;font-weight:800;}
+.hlogo span{color:var(--acc);}
+.hright{display:flex;align-items:center;gap:8px;}
+.upill{background:var(--sur2);border:1px solid var(--brd);border-radius:20px;padding:4px 11px;font-size:11px;color:var(--mut);}
+.upill b{color:var(--grn);}
+.rbadge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;}
+.r-admin{background:rgba(255,107,107,.15);color:var(--red);}
+.r-staff{background:rgba(91,142,255,.12);color:var(--acc);}
+/* BUTTONS */
+.btn{padding:6px 12px;border-radius:6px;border:none;cursor:pointer;font-family:"DM Mono",monospace;font-size:12px;font-weight:500;}
+.btn-p{background:var(--acc);color:#fff;}
+.btn-p:hover{background:#7aa3ff;}
+.btn-g{background:transparent;color:var(--mut);border:1px solid var(--brd);}
+.btn-g:hover{color:var(--txt);border-color:var(--mut);}
+.btn-d{background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn-d:hover{background:var(--red);color:#fff;}
+.btn-s{padding:4px 9px;font-size:11px;}
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 54px);}
+.sidebar{width:206px;min-width:206px;background:var(--sur);border-right:1px solid var(--brd);padding:14px 0;overflow-y:auto;}
+.slbl{padding:4px 15px 6px;font-size:10px;color:var(--mut);letter-spacing:1.2px;text-transform:uppercase;}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 15px;color:var(--mut);cursor:pointer;border-left:2px solid transparent;}
+.ni:hover{color:var(--txt);background:var(--sur2);}
+.ni.on{color:var(--acc);border-left-color:var(--acc);background:rgba(91,142,255,.07);}
+main{flex:1;overflow-y:auto;padding:22px 26px;}
+/* PAGE */
+.ptitle{font-family:"Syne",sans-serif;font-size:23px;font-weight:700;margin-bottom:4px;}
+.psub{color:var(--mut);margin-bottom:18px;font-size:12px;}
+/* WEEK */
+.wbar{display:flex;align-items:center;gap:9px;margin-bottom:15px;}
+.wlbl{font-family:"Syne",sans-serif;font-size:14px;font-weight:600;color:var(--acc);min-width:176px;text-align:center;}
+.wbtn{background:var(--sur2);border:1px solid var(--brd);color:var(--txt);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;}
+.wbtn:hover{border-color:var(--acc);color:var(--acc);}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.sc{background:var(--sur2);border:1px solid var(--brd);border-radius:10px;padding:13px 15px;}
+.sc-l{color:var(--mut);font-size:10px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.sc-v{font-family:"Syne",sans-serif;font-size:25px;font-weight:800;}
+/* FORM PANEL */
+.fp{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+.fp h3{font-family:"Syne",sans-serif;font-size:14px;font-weight:600;margin-bottom:13px;color:var(--grn);}
+.fg{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 95px 95px;gap:9px;align-items:end;}
+.fg label{display:block;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.fc{width:100%;background:var(--bg);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:12px;padding:8px 9px;border-radius:6px;outline:none;}
+.fc:focus{border-color:var(--acc);}
+.fc option{background:var(--bg);}
+.full{grid-column:1/-1;}
+/* TABLE */
+.tw{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;overflow:hidden;margin-bottom:18px;}
+.th{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--brd);}
+.th h3{font-family:"Syne",sans-serif;font-size:14px;font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--sur);}
+th{padding:8px 11px;text-align:left;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--brd);}
+td{padding:8px 11px;font-size:12px;border-bottom:1px solid rgba(37,42,56,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(91,142,255,.03);}
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;background:rgba(91,142,255,.15);color:var(--acc);}
+.tc{font-weight:500;color:var(--grn);}
+/* SUMMARY */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.scard{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;overflow:hidden;}
+.sh{padding:10px 15px;border-bottom:1px solid var(--brd);font-family:"Syne",sans-serif;font-size:13px;font-weight:600;}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:8px 15px;border-bottom:1px solid rgba(37,42,56,.5);font-size:12px;}
+.sr:last-child{border-bottom:none;}
+.bw{flex:1;margin:0 9px;height:4px;background:var(--brd);border-radius:2px;overflow:hidden;}
+.bf{height:100%;border-radius:2px;background:var(--acc);}
+/* STAFF GRID */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;}
+.scard2{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;padding:16px;}
+/* SETTINGS */
+.sec{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+.sech{padding:11px 15px;border-bottom:1px solid var(--brd);font-family:"Syne",sans-serif;font-size:14px;font-weight:600;}
+.secb{padding:13px 15px;}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px;}
+.tag{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;font-size:12px;}
+.tagx{cursor:pointer;color:var(--mut);font-size:14px;line-height:1;}
+.tagx:hover{color:var(--red);}
+.arow{display:flex;gap:7px;}
+.ainp{flex:1;max-width:260px;background:var(--bg);border:1px solid var(--brd);color:var(--txt);font-family:"DM Mono",monospace;font-size:12px;padding:7px 9px;border-radius:6px;outline:none;}
+.ainp:focus{border-color:var(--acc);}
+/* MISC */
+.empty{text-align:center;padding:34px;color:var(--mut);font-size:12px;}
+.loading{text-align:center;padding:38px;color:var(--mut);}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;margin-bottom:7px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:18px;right:18px;padding:8px 15px;border-radius:8px;font-weight:500;font-size:12px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.on{opacity:1;transform:translateY(0);}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;}
+.mo.on{opacity:1;pointer-events:all;}
+.md{background:var(--sur);border:1px solid var(--brd);border-radius:14px;padding:22px 26px;min-width:380px;max-width:90vw;transform:scale(.96);transition:transform .2s;}
+.mo.on .md{transform:scale(1);}
+.md h3{font-family:"Syne",sans-serif;font-size:17px;font-weight:700;margin-bottom:13px;}
+.ma{display:flex;gap:9px;justify-content:flex-end;margin-top:15px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- CONFIG SCREEN -->
+<div id="s-config" class="screen" style="display:flex">
+  <div class="box">
+    <div class="logo">Time<span>Track</span></div>
+    <p class="sub">Connect your free Supabase project to get started.</p>
+    <label class="lbl">Supabase Project URL</label>
+    <input class="inp" id="c-url" placeholder="https://xxxxxxxxxxxxxx.supabase.co" type="url">
+    <label class="lbl">Supabase Anon Key (eyJ... from Settings &rarr; API &rarr; Legacy tab)</label>
+    <input class="inp" id="c-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+    <button class="btn-big" id="c-btn" onclick="doConnect()">Connect &amp; Continue</button>
+    <div id="cfg-msg"></div>
+    <div style="margin-top:16px;padding:12px;background:rgba(91,142,255,.07);border:1px solid rgba(91,142,255,.2);border-radius:8px;font-size:11px;color:var(--mut);line-height:1.9">
+      <b style="color:var(--txt)">Your credentials:</b><br>
+      URL: <code style="background:var(--bg);padding:1px 4px;border-radius:3px">https://lvcvvowizydowwpppdul.supabase.co</code><br>
+      Key: Settings &rarr; API &rarr; Legacy anon tab &rarr; copy the eyJ... key
+    </div>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="s-auth" class="screen">
+  <div class="box" style="width:400px">
+    <div class="logo">Time<span>Track</span></div>
+    <p class="sub">Sign in to log your time</p>
+    <div class="tabs">
+      <button class="tab on" id="t-in" onclick="swTab(0)">Sign In</button>
+      <button class="tab" id="t-up" onclick="swTab(1)">Sign Up</button>
+    </div>
+    <div id="f-in">
+      <label class="lbl">Email</label>
+      <input class="inp" id="in-e" type="email" placeholder="you@company.com">
+      <label class="lbl">Password</label>
+      <input class="inp" id="in-p" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')signIn()">
+      <button class="btn-big" onclick="signIn()">Sign In</button>
+    </div>
+    <div id="f-up" style="display:none">
+      <label class="lbl">Full Name</label>
+      <input class="inp" id="up-n" placeholder="Jane Smith">
+      <label class="lbl">Email</label>
+      <input class="inp" id="up-e" type="email" placeholder="you@company.com">
+      <label class="lbl">Password</label>
+      <input class="inp" id="up-p" type="password" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')signUp()">
+      <button class="btn-big" onclick="signUp()">Create Account</button>
+    </div>
+    <div id="auth-msg"></div>
+    <div style="margin-top:12px;font-size:11px;text-align:center">
+      <a href="#" onclick="goConfig()" style="color:var(--mut)">&larr; Change project</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="s-app" style="display:none;flex-direction:column">
+  <header>
+    <div class="hlogo">Time<span>Track</span></div>
+    <div class="hright">
+      <div class="upill">Signed in as <b id="d-name">-</b></div>
+      <span class="rbadge" id="d-role"></span>
+      <button class="btn btn-g btn-s" onclick="doExport()">&#8595; CSV</button>
+      <button class="btn btn-p btn-s" onclick="go('entry')">+ Log Time</button>
+      <button class="btn btn-g btn-s" onclick="signOut()">Sign Out</button>
+    </div>
+  </header>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="slbl">Menu</div>
+      <div class="ni on" data-p="entry" onclick="go('entry')">&#9201; Log Time</div>
+      <div class="ni" data-p="sheets" onclick="go('sheets')">&#128203; Timesheets</div>
+      <div class="ni" data-p="summary" onclick="go('summary')">&#128202; Summary</div>
+      <div class="ni adm" data-p="staff" onclick="go('staff')">&#128101; All Staff</div>
+      <div class="slbl" style="margin-top:10px">Settings</div>
+      <div class="ni adm" data-p="settings" onclick="go('settings')">&#9881; Settings</div>
+      <div class="ni" data-p="account" onclick="go('account')">&#128100; My Account</div>
+    </nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="mo" id="emod">
+  <div class="md">
+    <h3>Edit Entry</h3>
+    <div id="eform"></div>
+    <div class="ma">
+      <button class="btn btn-g" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-p" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var URL2='', KEY='', TOK='', REF='';
+var ME=null, PROF=null;
+var CFG={projects:[],customers:[],tasks:[],staff:[]};
+var WK=0, EID=null, PAGE='entry';
+
+// ---- REST ----
+function hdr(x){
+  var h={'apikey':KEY,'Content-Type':'application/json'};
+  if(TOK) h['Authorization']='Bearer '+TOK;
+  if(x) for(var k in x) h[k]=x[k];
+  return h;
+}
+async function GET(p,single){
+  var h=single?{'Accept':'application/vnd.pgrst.object+json'}:{};
+  var r=await fetch(URL2+'/rest/v1/'+p,{headers:hdr(h)});
+  var t=await r.text();
+  return{ok:r.ok,st:r.status,d:pj(t)};
+}
+async function POST(p,b){
+  var r=await fetch(URL2+'/rest/v1/'+p,{method:'POST',headers:hdr({'Prefer':'return=representation'}),body:JSON.stringify(b)});
+  var t=await r.text();
+  return{ok:r.ok,d:pj(t)};
+}
+async function PATCH(p,b){
+  var r=await fetch(URL2+'/rest/v1/'+p,{method:'PATCH',headers:hdr({'Prefer':'return=representation'}),body:JSON.stringify(b)});
+  var t=await r.text();
+  return{ok:r.ok,d:pj(t)};
+}
+async function DEL(p){
+  var r=await fetch(URL2+'/rest/v1/'+p,{method:'DELETE',headers:hdr()});
+  return{ok:r.ok};
+}
+async function UPS(p,b){
+  var r=await fetch(URL2+'/rest/v1/'+p,{method:'POST',headers:hdr({'Prefer':'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(b)});
+  var t=await r.text();
+  return{ok:r.ok,d:pj(t)};
+}
+function pj(t){try{return t?JSON.parse(t):null;}catch(e){return t;}}
+
+// ---- AUTH API ----
+async function authLogin(email,pw){
+  var r=await fetch(URL2+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});
+  return{ok:r.ok,d:await r.json()};
+}
+async function authSignup(email,pw,name){
+  var r=await fetch(URL2+'/auth/v1/signup',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw,data:{full_name:name}})});
+  return{ok:r.ok,d:await r.json()};
+}
+async function authLogout(){
+  await fetch(URL2+'/auth/v1/logout',{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+TOK}});
+}
+async function authRefresh(rt){
+  var r=await fetch(URL2+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})});
+  return{ok:r.ok,d:await r.json()};
+}
+
+// ---- CONFIG ----
+function goConfig(){
+  show('s-config');
+}
+function cfgMsg(m,t){
+  var el=document.getElementById('cfg-msg');
+  var bg={ok:'rgba(67,232,160,.1)',err:'rgba(255,107,107,.1)',inf:'rgba(91,142,255,.1)'};
+  var fg={ok:'#43e8a0',err:'#ff6b6b',inf:'#5b8eff'};
+  el.style.display='block';
+  el.style.background=bg[t]||bg.inf;
+  el.style.color=fg[t]||fg.inf;
+  el.style.padding='10px 14px';
+  el.style.borderRadius='8px';
+  el.style.fontSize='12px';
+  el.textContent=m;
+}
+async function doConnect(){
+  var url=document.getElementById('c-url').value.trim().replace(/\/+$/,'');
+  var key=document.getElementById('c-key').value.trim();
+  var btn=document.getElementById('c-btn');
+  if(!url){cfgMsg('Please enter the Project URL','err');return;}
+  if(!url.startsWith('https://')){cfgMsg('URL must start with https://','err');return;}
+  if(!key){cfgMsg('Please enter the Anon Key','err');return;}
+  if(key.length<50){cfgMsg('Key looks too short - paste the full eyJ... anon key','err');return;}
+  btn.disabled=true;
+  btn.textContent='Connecting...';
+  cfgMsg('Testing connection...','inf');
+  URL2=url; KEY=key;
+  try{
+    var r=await fetch(url+'/auth/v1/settings',{headers:{'apikey':key}});
+    localStorage.setItem('tt_url',url);
+    localStorage.setItem('tt_key',key);
+    cfgMsg('Connected! Taking you to login...','ok');
+    setTimeout(function(){
+      show('s-auth');
+      btn.disabled=false;
+      btn.textContent='Connect & Continue';
+    },800);
+  }catch(e){
+    // CORS error still means server is reachable
+    localStorage.setItem('tt_url',url);
+    localStorage.setItem('tt_key',key);
+    cfgMsg('Connected! Taking you to login...','ok');
+    setTimeout(function(){
+      show('s-auth');
+      btn.disabled=false;
+      btn.textContent='Connect & Continue';
+    },800);
+  }
+}
+
+// ---- AUTH ----
+function swTab(i){
+  document.getElementById('f-in').style.display=i===0?'block':'none';
+  document.getElementById('f-up').style.display=i===1?'block':'none';
+  document.getElementById('t-in').className='tab'+(i===0?' on':'');
+  document.getElementById('t-up').className='tab'+(i===1?' on':'');
+  amsg('');
+}
+function amsg(m,ok){
+  var el=document.getElementById('auth-msg');
+  el.style.color=ok?'var(--grn)':'var(--red)';
+  el.textContent=m||'';
+}
+async function signIn(){
+  var e=document.getElementById('in-e').value.trim();
+  var p=document.getElementById('in-p').value;
+  if(!e||!p){amsg('Please fill in all fields');return;}
+  amsg('Signing in...','ok');
+  var r=await authLogin(e,p);
+  if(!r.ok||r.d.error){amsg(r.d.error_description||r.d.msg||'Sign in failed');return;}
+  TOK=r.d.access_token; REF=r.d.refresh_token; ME=r.d.user;
+  localStorage.setItem('tt_tok',TOK);
+  localStorage.setItem('tt_ref',REF);
+  await loadAndLaunch();
+}
+async function signUp(){
+  var n=document.getElementById('up-n').value.trim();
+  var e=document.getElementById('up-e').value.trim();
+  var p=document.getElementById('up-p').value;
+  if(!n||!e||!p){amsg('Please fill in all fields');return;}
+  amsg('Creating account...','ok');
+  var r=await authSignup(e,p,n);
+  if(!r.ok||r.d.error){amsg(r.d.error_description||r.d.msg||'Sign up failed');return;}
+  if(r.d.user&&!r.d.session){amsg('Check your email to confirm, then sign in.','ok');return;}
+  if(r.d.session){
+    TOK=r.d.session.access_token; REF=r.d.session.refresh_token; ME=r.d.user;
+    localStorage.setItem('tt_tok',TOK);
+    localStorage.setItem('tt_ref',REF);
+    await loadAndLaunch();
+  }
+}
+async function signOut(){
+  await authLogout();
+  TOK=''; REF=''; ME=null; PROF=null;
+  localStorage.removeItem('tt_tok');
+  localStorage.removeItem('tt_ref');
+  show('s-auth');
+}
+
+// ---- LOAD & LAUNCH ----
+async function loadAndLaunch(){
+  var r=await GET('profiles?id=eq.'+ME.id,true);
+  PROF=r.d||{id:ME.id,full_name:ME.email,role:'staff'};
+  var s=await GET('settings?select=key,value');
+  if(Array.isArray(s.d)) s.d.forEach(function(row){CFG[row.key]=row.value;});
+  if(PROF.role==='admin'){
+    var p=await GET('profiles?select=id,full_name,role');
+    if(Array.isArray(p.d)) CFG.staff=p.d;
+  }
+  document.getElementById('d-name').textContent=PROF.full_name||ME.email||'-';
+  var rb=document.getElementById('d-role');
+  var isA=PROF.role==='admin';
+  rb.textContent=isA?'admin':'staff';
+  rb.className='rbadge '+(isA?'r-admin':'r-staff');
+  document.querySelectorAll('.adm').forEach(function(el){el.style.display=isA?'flex':'none';});
+  show('s-app');
+  go('entry');
+}
+
+// ---- NAVIGATION ----
+function show(id){
+  ['s-config','s-auth','s-app'].forEach(function(s){
+    var el=document.getElementById(s);
+    if(s==='s-app') el.style.display=s===id?'flex':'none';
+    else el.style.display=s===id?'flex':'none';
+  });
+}
+function go(p){
+  PAGE=p;
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.toggle('on',n.dataset.p===p);});
+  document.getElementById('main').innerHTML='<div class="loading"><div class="spin"></div><br>Loading...</div>';
+  var fn={entry:pgEntry,sheets:pgSheets,summary:pgSummary,staff:pgStaff,settings:pgSettings,account:pgAccount};
+  if(fn[p]) fn[p]();
+}
+
+// ---- ENTRY PAGE ----
+async function pgEntry(){
+  var isA=PROF&&PROF.role==='admin';
+  var w=wk(WK);
+  var q='date=gte.'+w.s+'&date=lte.'+w.e+'&order=date.desc';
+  if(!isA) q+='&user_id=eq.'+ME.id;
+  var r=await GET('time_entries?'+q);
+  var list=Array.isArray(r.d)?r.d:[];
+  var tot=sh(list);
+  var projs=new Set(list.map(function(e){return e.project;})).size;
+  var staffOpts='';
+  if(isA){
+    staffOpts='<option value="'+ME.id+'">'+(PROF.full_name||'Me')+' (me)</option>';
+    (CFG.staff||[]).forEach(function(s){if(s.id!==ME.id) staffOpts+='<option value="'+s.id+'">'+(s.full_name||s.id)+'</option>';});
+  }
+  var projOpts=(CFG.projects||[]).map(function(p){return '<option>'+p+'</option>';}).join('');
+  var custOpts=(CFG.customers||[]).map(function(c){return '<option>'+c+'</option>';}).join('');
+  var taskOpts=(CFG.tasks||[]).map(function(t){return '<option>'+t+'</option>';}).join('');
+  var rows=list.map(function(e){
+    var canE=isA||e.user_id===ME.id;
+    return '<tr>'+
+      '<td>'+fd(e.date)+'</td>'+
+      (isA?'<td><span class="bdg">'+sname(e.user_id)+'</span></td>':'')+
+      '<td>'+(e.customer||'-')+'</td>'+
+      '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.project+'</td>'+
+      '<td>'+e.task+'</td>'+
+      '<td class="tc">'+parseFloat(e.hours).toFixed(1)+'h</td>'+
+      '<td style="color:var(--mut)">'+(e.notes||'-')+'</td>'+
+      '<td style="white-space:nowrap">'+(canE?'<button class="btn btn-g btn-s" onclick=\'openEdit('+JSON.stringify(e)+')\'>Edit</button> <button class="btn btn-d btn-s" onclick="delE(\''+e.id+'\')">Del</button>':'')+
+      '</td></tr>';
+  }).join('');
+  var html='<div class="ptitle">Log Time</div>'+
+    '<p class="psub">Record hours against projects and customers</p>'+
+    '<div class="wbar">'+
+      '<button class="wbtn" onclick="chW(-1)">&#9664;</button>'+
+      '<div class="wlbl">'+w.label+'</div>'+
+      '<button class="wbtn" onclick="chW(1)">&#9654;</button>'+
+      (WK!==0?'<button class="btn btn-g btn-s" onclick="chW(0,1)">Today</button>':'')+
+    '</div>'+
+    '<div class="stats">'+
+      '<div class="sc"><div class="sc-l">Hours This Week</div><div class="sc-v" style="color:var(--acc)">'+tot.toFixed(1)+'</div></div>'+
+      '<div class="sc"><div class="sc-l">Entries</div><div class="sc-v">'+list.length+'</div></div>'+
+      '<div class="sc"><div class="sc-l">Projects</div><div class="sc-v" style="color:var(--grn)">'+projs+'</div></div>'+
+      '<div class="sc"><div class="sc-l">Daily Avg</div><div class="sc-v">'+(tot/5).toFixed(1)+'h</div></div>'+
+    '</div>'+
+    '<div class="fp"><h3>+ New Entry</h3>'+
+    '<div class="fg">'+
+      '<div><label>Date</label><input type="date" class="fc" id="fd" value="'+td()+'"></div>'+
+      (isA?'<div><label>Staff</label><select class="fc" id="fu"><option value="">Select...</option>'+staffOpts+'</select></div>':'')+
+      '<div><label>Customer</label><select class="fc" id="fcu"><option value="">-- Customer --</option>'+custOpts+'</select></div>'+
+      '<div><label>Project</label><select class="fc" id="fp"><option value="">-- Project --</option>'+projOpts+'</select></div>'+
+      '<div><label>Task</label><select class="fc" id="ft"><option value="">-- Task --</option>'+taskOpts+'</select></div>'+
+      '<div><label>Hours</label><input type="number" class="fc" id="fh" min="0.5" max="24" step="0.5" placeholder="8.0"></div>'+
+      '<div class="full"><label>Notes (optional)</label><input type="text" class="fc" id="fn2" placeholder="Any notes..."></div>'+
+      '<div style="align-self:end"><button class="btn btn-p" style="width:100%" onclick="addE()">Log Time</button></div>'+
+    '</div></div>'+
+    '<div class="tw"><div class="th"><h3>'+(isA?'All Staff':'My')+' Entries This Week</h3></div>'+
+    (list.length===0?'<div class="empty">No entries for this week yet.</div>':
+      '<table><thead><tr>'+
+        '<th>Date</th>'+(isA?'<th>Staff</th>':'')+
+        '<th>Customer</th><th>Project</th><th>Task</th><th>Hours</th><th>Notes</th><th></th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>')+
+    '</div>';
+  document.getElementById('main').innerHTML=html;
+}
+function chW(d,r){WK=r?0:WK+d;go('entry');}
+async function addE(){
+  var date=gv('fd'),proj=gv('fp'),task=gv('ft');
+  var hrs=parseFloat(gv('fh')),notes=gv('fn2'),cust=gv('fcu');
+  var uel=document.getElementById('fu');
+  var uid=uel?uel.value||ME.id:ME.id;
+  if(!date||!proj||!task||isNaN(hrs)||hrs<=0){toast('Fill in all required fields',1);return;}
+  var r=await POST('time_entries',{date:date,project:proj,customer:cust,task:task,hours:hrs,notes:notes,user_id:uid});
+  if(!r.ok){toast((r.d&&r.d.message)||'Insert failed',1);return;}
+  toast('Entry logged');go('entry');
+}
+async function delE(id){
+  if(!confirm('Delete this entry?')) return;
+  var r=await DEL('time_entries?id=eq.'+id);
+  if(!r.ok){toast('Delete failed',1);return;}
+  toast('Deleted');go(PAGE);
+}
+function openEdit(e){
+  EID=e.id;
+  var projOpts=(CFG.projects||[]).map(function(p){return '<option'+(p===e.project?' selected':'')+'>'+p+'</option>';}).join('');
+  var custOpts=(CFG.customers||[]).map(function(c){return '<option'+(c===e.customer?' selected':'')+'>'+c+'</option>';}).join('');
+  var taskOpts=(CFG.tasks||[]).map(function(t){return '<option'+(t===e.task?' selected':'')+'>'+t+'</option>';}).join('');
+  document.getElementById('eform').innerHTML=
+    '<div class="fg" style="grid-template-columns:1fr 1fr 1fr">'+
+      '<div><label class="lbl">Date</label><input type="date" class="fc" id="ed" value="'+e.date+'"></div>'+
+      '<div><label class="lbl">Customer</label><select class="fc" id="ec"><option value="">-</option>'+custOpts+'</select></div>'+
+      '<div><label class="lbl">Project</label><select class="fc" id="ep">'+projOpts+'</select></div>'+
+      '<div><label class="lbl">Task</label><select class="fc" id="et">'+taskOpts+'</select></div>'+
+      '<div><label class="lbl">Hours</label><input type="number" class="fc" id="eh" value="'+e.hours+'" min="0.5" step="0.5"></div>'+
+      '<div class="full"><label class="lbl">Notes</label><input type="text" class="fc" id="en" value="'+(e.notes||'')+'"></div>'+
+    '</div>';
+  document.getElementById('emod').classList.add('on');
+}
+async function saveEdit(){
+  var b={date:gv('ed'),customer:gv('ec'),project:gv('ep'),task:gv('et'),hours:parseFloat(gv('eh')),notes:gv('en')};
+  var r=await PATCH('time_entries?id=eq.'+EID,b);
+  if(!r.ok){toast('Update failed',1);return;}
+  closeEdit();toast('Updated');go(PAGE);
+}
+function closeEdit(){document.getElementById('emod').classList.remove('on');EID=null;}
+
+// ---- TIMESHEETS ----
+async function pgSheets(){
+  var isA=PROF&&PROF.role==='admin';
+  var fs=window._fs||'',fp=window._fp||'',fc=window._fc||'';
+  var q='order=date.desc';
+  if(!isA) q+='&user_id=eq.'+ME.id;
+  else if(fs) q+='&user_id=eq.'+fs;
+  if(fp) q+='&project=eq.'+encodeURIComponent(fp);
+  if(fc) q+='&customer=eq.'+encodeURIComponent(fc);
+  var r=await GET('time_entries?'+q);
+  var list=Array.isArray(r.d)?r.d:[];
+  var staffSel='';
+  if(isA){
+    staffSel='<select class="fc" style="width:150px" onchange="window._fs=this.value;go(\'sheets\')"><option value="">All Staff</option>'+
+      (CFG.staff||[]).map(function(s){return '<option value="'+s.id+'"'+(fs===s.id?' selected':'')+'>'+(s.full_name||s.id)+'</option>';}).join('')+
+    '</select>';
+  }
+  var rows=list.map(function(e){
+    var canE=isA||e.user_id===ME.id;
+    return '<tr>'+
+      '<td>'+fd(e.date)+'</td>'+
+      (isA?'<td><span class="bdg">'+sname(e.user_id)+'</span></td>':'')+
+      '<td>'+(e.customer||'-')+'</td>'+
+      '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.project+'</td>'+
+      '<td>'+e.task+'</td>'+
+      '<td class="tc">'+parseFloat(e.hours).toFixed(1)+'h</td>'+
+      '<td style="color:var(--mut)">'+(e.notes||'-')+'</td>'+
+      '<td style="white-space:nowrap">'+(canE?'<button class="btn btn-g btn-s" onclick=\'openEdit('+JSON.stringify(e)+')\'>Edit</button> <button class="btn btn-d btn-s" onclick="delE(\''+e.id+'\')">Del</button>':'')+
+      '</td></tr>';
+  }).join('');
+  var html='<div class="ptitle">All Timesheets</div>'+
+    '<p class="psub">Browse and filter all time entries</p>'+
+    '<div style="display:flex;gap:9px;margin-bottom:13px;flex-wrap:wrap;align-items:center">'+
+      staffSel+
+      '<select class="fc" style="width:155px" onchange="window._fc=this.value;go(\'sheets\')"><option value="">All Customers</option>'+
+        (CFG.customers||[]).map(function(c){return '<option'+(fc===c?' selected':'')+'>'+c+'</option>';}).join('')+
+      '</select>'+
+      '<select class="fc" style="width:190px" onchange="window._fp=this.value;go(\'sheets\')"><option value="">All Projects</option>'+
+        (CFG.projects||[]).map(function(p){return '<option'+(fp===p?' selected':'')+'>'+p+'</option>';}).join('')+
+      '</select>'+
+      ((fs||fp||fc)?'<button class="btn btn-g btn-s" onclick="window._fs=\'\';window._fp=\'\';window._fc=\'\';go(\'sheets\')">Clear</button>':'')+
+      '<span style="margin-left:auto;color:var(--mut);font-size:12px">'+list.length+' entries &middot; '+sh(list).toFixed(1)+'h</span>'+
+    '</div>'+
+    '<div class="tw">'+
+    (list.length===0?'<div class="empty">No entries found.</div>':
+      '<table><thead><tr>'+
+        '<th>Date</th>'+(isA?'<th>Staff</th>':'')+
+        '<th>Customer</th><th>Project</th><th>Task</th><th>Hours</th><th>Notes</th><th></th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>')+
+    '</div>';
+  document.getElementById('main').innerHTML=html;
+}
+
+// ---- SUMMARY ----
+async function pgSummary(){
+  var isA=PROF&&PROF.role==='admin';
+  var q=isA?'':'user_id=eq.'+ME.id;
+  var r=await GET('time_entries'+(q?'?'+q:''));
+  var list=Array.isArray(r.d)?r.d:[];
+  var byP=gb(list,'project'),byC=gb(list,'customer');
+  var mP=Math.max.apply(null,Object.values(byP).map(sh).concat([1]));
+  var mC=Math.max.apply(null,Object.values(byC).map(sh).concat([1]));
+  var weeks=[];
+  for(var i=-7;i<=0;i++){var w=wk(i);var wl=list.filter(function(e){return e.date>=w.s&&e.date<=w.e;});weeks.push({l:fs2(new Date(w.s+'T00:00')),h:sh(wl)});}
+  var mW=Math.max.apply(null,weeks.map(function(w){return w.h;}).concat([1]));
+  var pRows=Object.entries(byP).sort(function(a,b){return sh(b[1])-sh(a[1]);}).map(function(kv){
+    var h=sh(kv[1]);
+    return '<div class="sr"><span style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+kv[0]+'</span>'+
+      '<div class="bw"><div class="bf" style="width:'+(h/mP*100).toFixed(1)+'%"></div></div>'+
+      '<span style="color:var(--grn);white-space:nowrap">'+h.toFixed(1)+'h</span></div>';
+  }).join('');
+  var cRows=Object.entries(byC).sort(function(a,b){return sh(b[1])-sh(a[1]);}).map(function(kv){
+    var h=sh(kv[1]);
+    return '<div class="sr"><span>'+kv[0]+'</span>'+
+      '<div class="bw"><div class="bf" style="width:'+(h/mC*100).toFixed(1)+'%;background:var(--grn)"></div></div>'+
+      '<span style="color:var(--grn)">'+h.toFixed(1)+'h</span></div>';
+  }).join('');
+  var bars=weeks.map(function(w){
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">'+
+      '<div style="font-size:10px;color:var(--grn)">'+(w.h>0?w.h.toFixed(0)+'h':'')+'</div>'+
+      '<div style="width:100%;background:var(--acc);border-radius:4px 4px 0 0;height:'+(w.h/mW*58).toFixed(0)+'px;min-height:'+(w.h>0?3:0)+'px"></div>'+
+      '<div style="font-size:10px;color:var(--mut);white-space:nowrap">'+w.l+'</div></div>';
+  }).join('');
+  var html='<div class="ptitle">Summary</div>'+
+    '<p class="psub">'+(isA?'All staff':'Your')+' hours breakdown</p>'+
+    '<div class="sg">'+
+      '<div class="scard"><div class="sh">By Project</div>'+(pRows||'<div class="empty">No data</div>')+'</div>'+
+      '<div class="scard"><div class="sh">By Customer</div>'+(cRows||'<div class="empty">No data</div>')+'</div>'+
+    '</div>'+
+    '<div class="scard" style="margin-top:13px"><div class="sh">Weekly Hours (last 8 weeks)</div>'+
+      '<div style="padding:13px 15px;display:flex;align-items:flex-end;gap:5px;height:105px">'+bars+'</div>'+
+    '</div>';
+  document.getElementById('main').innerHTML=html;
+}
+
+// ---- STAFF PAGE ----
+async function pgStaff(){
+  var rp=await GET('profiles?select=id,full_name,role');
+  if(Array.isArray(rp.d)) CFG.staff=rp.d;
+  var r=await GET('time_entries');
+  var list=Array.isArray(r.d)?r.d:[];
+  var w=wk(0);
+  var cards=(CFG.staff||[]).map(function(s){
+    var se=list.filter(function(e){return e.user_id===s.id;});
+    var tot=sh(se),wh=sh(se.filter(function(e){return e.date>=w.s&&e.date<=w.e;}));
+    var top=Object.entries(gb(se,'project')).sort(function(a,b){return sh(b[1])-sh(a[1]);}).slice(0,3);
+    var topHtml=top.map(function(kv){
+      return '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:3px">'+
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">'+kv[0]+'</span>'+
+        '<span style="color:var(--grn)">'+sh(kv[1]).toFixed(1)+'h</span></div>';
+    }).join('');
+    var isMe=s.id===ME.id;
+    return '<div class="scard2">'+
+      '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:700">'+( s.full_name||'Unnamed')+'</div>'+
+      '<div style="color:var(--mut);font-size:10px;margin-bottom:8px">'+(s.role==='admin'?'Admin':'Staff')+'</div>'+
+      '<div style="font-family:Syne,sans-serif;font-size:22px;font-weight:700;color:var(--grn)">'+tot.toFixed(1)+'h</div>'+
+      '<div style="color:var(--mut);font-size:11px;margin-bottom:9px">This week: <span style="color:var(--grn)">'+wh.toFixed(1)+'h</span></div>'+
+      topHtml+
+      (!isMe?'<div style="margin-top:9px"><button class="btn btn-g btn-s" onclick="tRole(\''+s.id+'\',\''+s.role+'\')">'+
+        (s.role==='admin'?'Set as Staff':'Set as Admin')+'</button></div>':
+        '<div style="margin-top:9px;font-size:11px;color:var(--mut)">You</div>')+
+    '</div>';
+  }).join('');
+  document.getElementById('main').innerHTML=
+    '<div class="ptitle">Staff Overview</div>'+
+    '<p class="psub">Hours per team member</p>'+
+    '<div class="sgrid">'+cards+'</div>';
+}
+async function tRole(id,role){
+  var nr=role==='admin'?'staff':'admin';
+  if(!confirm('Change role to '+nr+'?')) return;
+  var r=await PATCH('profiles?id=eq.'+id,{role:nr});
+  if(!r.ok){toast('Update failed',1);return;}
+  var s=(CFG.staff||[]).find(function(x){return x.id===id;});
+  if(s) s.role=nr;
+  toast('Role changed to '+nr);go('staff');
+}
+
+// ---- SETTINGS ----
+async function pgSettings(){
+  var rp=await GET('profiles?select=id,full_name,role');
+  if(Array.isArray(rp.d)) CFG.staff=rp.d;
+
+  var staffRows=(CFG.staff||[]).map(function(s){
+    var isMe=s.id===ME.id;
+    return '<tr>'+
+      '<td>'+(s.full_name||'(no name)')+'</td>'+
+      '<td style="color:var(--mut);font-size:11px">'+s.id.slice(0,16)+'...</td>'+
+      '<td><span class="bdg" style="'+(s.role==='admin'?'background:rgba(255,107,107,.15);color:var(--red)':'')+'">'+s.role+'</span></td>'+
+      '<td>'+(isMe?'<span style="color:var(--mut);font-size:11px">You</span>':
+        '<button class="btn btn-g btn-s" onclick="tRole(\''+s.id+'\',\''+s.role+'\')">'+
+        (s.role==='admin'?'Set as Staff':'Set as Admin')+'</button>')+
+      '</td></tr>';
+  }).join('');
+
+  var html=
+    '<div class="ptitle">Settings</div>'+
+    '<p class="psub">Manage staff, projects, customers and task types</p>'+
+
+    // Staff section
+    '<div class="sec"><div class="sech">Staff Members</div><div class="secb">'+
+      '<table style="width:100%;border-collapse:collapse;margin-bottom:14px">'+
+        '<thead><tr>'+
+          '<th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--brd)">Name</th>'+
+          '<th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--brd)">ID</th>'+
+          '<th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--brd)">Role</th>'+
+          '<th style="padding:8px 10px;border-bottom:1px solid var(--brd)"></th>'+
+        '</tr></thead>'+
+        '<tbody>'+staffRows+'</tbody>'+
+      '</table>'+
+      '<div style="padding:12px;background:rgba(91,142,255,.07);border:1px solid rgba(91,142,255,.2);border-radius:8px;font-size:12px;color:var(--mut);line-height:1.8;margin-bottom:13px">'+
+        '<b style="color:var(--txt)">+ Add new staff member</b><br>'+
+        'Fill in the form below to create a staff account. They can sign in straight away.'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'+
+        '<div><label class="lbl">Full Name</label><input class="ainp" id="sn" placeholder="Jane Smith" style="width:160px"></div>'+
+        '<div><label class="lbl">Email</label><input class="ainp" id="se" type="email" placeholder="jane@company.com" style="width:200px"></div>'+
+        '<div><label class="lbl">Password</label><input class="ainp" id="sp" type="password" placeholder="Min 6 chars" style="width:140px"></div>'+
+        '<div style="align-self:flex-end"><button class="btn btn-p btn-s" onclick="createStaff()">Create Account</button></div>'+
+      '</div>'+
+      '<div id="smsg" style="font-size:11px;margin-top:8px;min-height:16px"></div>'+
+    '</div></div>'+
+
+    tsec('projects','Projects')+
+    tsec('customers','Customers')+
+    tsec('tasks','Task Types');
+
+  document.getElementById('main').innerHTML=html;
+}
+function tsec(key,label){
+  var items=(CFG[key]||[]);
+  var tags=items.map(function(item){
+    return '<div class="tag"><span class="bdg">'+item+'</span><span class="tagx" onclick="rmTag(\''+key+'\',\''+item+'\')">&#215;</span></div>';
+  }).join('');
+  return '<div class="sec"><div class="sech">'+label+'</div><div class="secb">'+
+    '<div class="tags">'+tags+'</div>'+
+    '<div class="arow">'+
+      '<input type="text" class="ainp" id="ni-'+key+'" placeholder="Add '+label.slice(0,-1).toLowerCase()+'..." onkeydown="if(event.key===\'Enter\')addTag(\''+key+'\')">'+
+      '<button class="btn btn-p btn-s" onclick="addTag(\''+key+'\')">Add</button>'+
+    '</div></div></div>';
+}
+async function addTag(key){
+  var el=document.getElementById('ni-'+key);
+  var val=el.value.trim();
+  if(!val) return;
+  var arr=(CFG[key]||[]).slice();
+  if(arr.indexOf(val)>-1){toast('Already exists',1);return;}
+  arr.push(val);
+  var r=await UPS('settings',{key:key,value:arr});
+  if(!r.ok){toast('Save failed',1);return;}
+  CFG[key]=arr;toast(val+' added');go('settings');
+}
+async function rmTag(key,val){
+  if(!confirm('Remove "'+val+'"?')) return;
+  var arr=(CFG[key]||[]).filter(function(x){return x!==val;});
+  var r=await UPS('settings',{key:key,value:arr});
+  if(!r.ok){toast('Save failed',1);return;}
+  CFG[key]=arr;toast('Removed');go('settings');
+}
+async function createStaff(){
+  var n=document.getElementById('sn').value.trim();
+  var e=document.getElementById('se').value.trim();
+  var p=document.getElementById('sp').value;
+  var msg=document.getElementById('smsg');
+  if(!n||!e||!p){msg.style.color='var(--red)';msg.textContent='Please fill in name, email and password.';return;}
+  if(p.length<6){msg.style.color='var(--red)';msg.textContent='Password must be at least 6 characters.';return;}
+  msg.style.color='var(--grn)';msg.textContent='Creating account...';
+  var r=await authSignup(e,p,n);
+  if(!r.ok||r.d.error){msg.style.color='var(--red)';msg.textContent=r.d.error_description||r.d.msg||'Failed.';return;}
+  msg.style.color='var(--grn)';
+  msg.textContent='Account created for '+e+'! They can now sign in.';
+  document.getElementById('sn').value='';
+  document.getElementById('se').value='';
+  document.getElementById('sp').value='';
+  setTimeout(function(){go('settings');},1500);
+}
+
+// ---- ACCOUNT ----
+function pgAccount(){
+  document.getElementById('main').innerHTML=
+    '<div class="ptitle">My Account</div>'+
+    '<p class="psub">Update your profile</p>'+
+    '<div class="sec"><div class="sech">Profile</div><div class="secb">'+
+      '<label class="lbl">Full Name</label>'+
+      '<input class="inp" id="an" value="'+(PROF.full_name||'')+'" style="max-width:280px;margin-bottom:12px">'+
+      '<br><label class="lbl">Email</label>'+
+      '<input class="inp" value="'+(ME.email||'')+'" disabled style="max-width:280px;opacity:.5;margin-bottom:14px">'+
+      '<br><button class="btn btn-p" onclick="saveName()">Save Name</button>'+
+    '</div></div>'+
+    '<div class="sec" style="margin-top:13px"><div class="sech">Change Password</div><div class="secb">'+
+      '<label class="lbl">New Password</label>'+
+      '<input type="password" class="inp" id="apw" placeholder="Min 6 characters" style="max-width:280px;margin-bottom:13px">'+
+      '<br><button class="btn btn-p" onclick="savePw()">Update Password</button>'+
+    '</div></div>';
+}
+async function saveName(){
+  var n=document.getElementById('an').value.trim();
+  var r=await PATCH('profiles?id=eq.'+ME.id,{full_name:n});
+  if(!r.ok){toast('Update failed',1);return;}
+  PROF.full_name=n;
+  document.getElementById('d-name').textContent=n;
+  toast('Name updated');
+}
+async function savePw(){
+  var p=document.getElementById('apw').value;
+  if(!p||p.length<6){toast('Password must be 6+ characters',1);return;}
+  var r=await fetch(URL2+'/auth/v1/user',{method:'PUT',headers:{'apikey':KEY,'Authorization':'Bearer '+TOK,'Content-Type':'application/json'},body:JSON.stringify({password:p})});
+  if(!r.ok){toast('Password update failed',1);return;}
+  toast('Password updated');
+  document.getElementById('apw').value='';
+}
+
+// ---- EXPORT ----
+async function doExport(){
+  var isA=PROF&&PROF.role==='admin';
+  var q='order=date.desc'+(isA?'':'&user_id=eq.'+ME.id);
+  var r=await GET('time_entries?'+q);
+  var list=Array.isArray(r.d)?r.d:[];
+  var rows=[['Date','Staff','Customer','Project','Task','Hours','Notes']];
+  list.forEach(function(e){rows.push([e.date,sname(e.user_id),e.customer||'','"'+e.project+'"','"'+e.task+'"',e.hours,'"'+(e.notes||'')+'"']);});
+  var csv=rows.map(function(r){return r.join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='timesheet_'+td()+'.csv';
+  a.click();
+  toast('CSV exported');
+}
+
+// ---- UTILS ----
+function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function td(){return new Date().toISOString().slice(0,10);}
+function fd(d){return new Date(d+'T00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});}
+function fs2(d){return d.toLocaleDateString('en-AU',{day:'numeric',month:'short'});}
+function sh(a){return(a||[]).reduce(function(s,e){return s+(parseFloat(e.hours)||0);},0);}
+function gb(a,k){return(a||[]).reduce(function(acc,i){var kv=i[k]||'Unknown';if(!acc[kv])acc[kv]=[];acc[kv].push(i);return acc;},{});}
+function sname(uid){var s=(CFG.staff||[]).find(function(x){return x.id===uid;});return s?s.full_name||s.id:(uid?uid.slice(0,8):'?');}
+function toast(m,e){
+  var t=document.getElementById('toast');
+  t.textContent=m;
+  t.style.background=e?'var(--red)':'var(--grn)';
+  t.style.color=e?'#fff':'#0d1a12';
+  t.classList.add('on');
+  setTimeout(function(){t.classList.remove('on');},2500);
+}
+function wk(off){
+  var n=new Date(),dow=n.getDay();
+  var mon=new Date(n);mon.setDate(n.getDate()-((dow+6)%7)+off*7);
+  var sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  var f=function(d){return d.toISOString().slice(0,10);};
+  return{s:f(mon),e:f(sun),label:fs2(mon)+' - '+fs2(sun)};
+}
+
+// ---- BOOT ----
+(function(){
+  URL2=localStorage.getItem('tt_url')||'';
+  KEY=localStorage.getItem('tt_key')||'';
+  TOK=localStorage.getItem('tt_tok')||'';
+  REF=localStorage.getItem('tt_ref')||'';
+  if(URL2){
+    document.getElementById('c-url').value=URL2;
+    document.getElementById('c-key').value=KEY;
+  }
+  if(URL2&&KEY&&TOK){
+    authRefresh(REF).then(function(res){
+      if(res.ok&&res.d&&res.d.access_token){
+        TOK=res.d.access_token;REF=res.d.refresh_token;ME=res.d.user;
+        localStorage.setItem('tt_tok',TOK);localStorage.setItem('tt_ref',REF);
+        loadAndLaunch();
+      }else{
+        show('s-auth');
+      }
+    }).catch(function(){show('s-auth');});
+  }else if(URL2&&KEY){
+    show('s-auth');
+  }else{
+    show('s-config');
+  }
+})();
+</script>
+</body>
+</html>
